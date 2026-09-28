@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark; /* dark native scrollbars + form controls */
+}
+
+body {
+  @apply font-sans text-ink antialiased;
+  background-color: #02091b;
+  /* Soft blue glow top-left, faint mint glow bottom-right -- pulled from the logo */
+  background-image:
+    radial-gradient(900px 480px at 8% -8%, rgba(22, 105, 251, 0.2), transparent 60%),
+    radial-gradient(700px 420px at 100% 105%, rgba(12, 239, 176, 0.07), transparent 60%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Cyan -> blue, same direction as the "AI" in the wordmark */
+  .text-gradient {
+    @apply bg-gradient-to-r from-aqua to-brand bg-clip-text text-transparent;
+  }
+
+  .card {
+    @apply rounded-xl border border-line bg-surface/80 backdrop-blur-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-medium text-white transition hover:shadow-glow hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-surface px-5 py-2.5 font-medium text-ink transition hover:border-aqua/50 hover:bg-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-night/60 px-3 py-2.5 text-ink placeholder:text-inkFaint/70 focus:border-aqua focus:outline-none focus:ring-1 focus:ring-aqua;
+  }
+
+  .section-label {
+    @apply font-sans text-xs font-semibold uppercase tracking-wider text-inkFaint;
+  }
+}

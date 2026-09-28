@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: familyvault
+    ports:
+      - "5433:5432"  # host 5433 -> container 5432, since 5432 is often already
+                      # taken by a local Postgres install. Internal container
+                      # traffic (backend -> postgres) is unaffected — it always
+                      # uses port 5432 on the docker network regardless of this
+                      # mapping.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d familyvault"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/familyvault
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    # Not used until the knowledge-graph stretch feature is built; kept
+    # running from the start so docker-compose up matches AGENTS.md's
+    # "all services run as containers" without a later compose rewrite.
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://user:pass@postgres:5432/familyvault
+      OLLAMA_HOST: http://host.docker.internal:11434
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - uploads:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      # Lets the backend container reach Ollama running on the host
+      # machine (Ollama itself is NOT containerized — see AGENTS.md).
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # NOTE: this is read by vite.config.js's dev-server proxy, which runs
+      # INSIDE the frontend container -- so it must use the backend's
+      # Docker service name, never "localhost" (that would mean the
+      # frontend container itself, not the backend container).
+      VITE_API_BASE_URL: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  neo4j_data:
+  uploads:
